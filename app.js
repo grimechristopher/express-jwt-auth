@@ -1,7 +1,13 @@
 // app.js
 import express from 'express';
 
+// import routes
+import authRouter from './src/routes/auth.routes.js'
+
 const app = express();
+
+// Use auth routes
+app.use('/api/auth', authRouter);
 
 console.info("Running... ")
 
