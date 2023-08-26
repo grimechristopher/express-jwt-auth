@@ -83,11 +83,11 @@ describe('Account Model', () => {
       });
       
       // Call the function being tested
-      const findingEmail = await accountModel.findByEmail('chris@chrisgrime.com');
+      const findingEmail = await accountModel.findByEmail('test@example.com');
   
       // The database should have been queried once
       expect(pool.query).toBeCalledTimes(1);
-      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = 'chris@chrisgrime.com';");
+      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);
       
       // findByEmail should return an empty array
       expect(findingEmail).toHaveLength(0);
@@ -98,18 +98,18 @@ describe('Account Model', () => {
       pool.query.mockResolvedValue({
         rows: [
           {
-            email: 'chris@chrisgrime.com',
+            email: 'test@example.com',
           },
         ],
       });
   
-      const email = 'chris@chrisgrime.com'
+      const email = 'test@example.com'
       const findingEmail = await accountModel.findByEmail(email);
       expect(pool.query).toBeCalledTimes(1);
-      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = 'chris@chrisgrime.com';");
+      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);
       expect(findingEmail).toHaveLength(1);
       expect(findingEmail).toEqual(
-        expect.arrayContaining([expect.objectContaining({email: 'chris@chrisgrime.com'}),]
+        expect.arrayContaining([expect.objectContaining({email: 'test@example.com'}),]
         )
       );
     });
@@ -123,13 +123,13 @@ describe('Account Model', () => {
       pool.query.mockResolvedValue({
         rows: [
           {
-            email: 'chris@chrisgrime.com',
+            email: 'test@example.com',
             password: 'test',
           },
         ],
       });
       
-      const createAccount = await accountModel.createAccount('chris@chrisgrime.com');
+      const createAccount = await accountModel.createAccount('test@example.com');
   
       expect(createAccount.message).toBe('Email already exists');
     });
@@ -141,7 +141,7 @@ describe('Account Model', () => {
       });
   
       let payload = {
-        email: 'chris@chrisgrime.com',
+        email: 'test@example.com',
         password: 'test',
       };
   
@@ -149,8 +149,8 @@ describe('Account Model', () => {
   
       // Database gets queried twice, once to check if the email exists and then to insert the new account
       expect(pool.query).toBeCalledTimes(2);
-      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = 'chris@chrisgrime.com';");  
-      expect(pool.query).toHaveBeenCalledWith("INSERT INTO account (email, password) VALUES ('chris@chrisgrime.com', 'test');");  
+      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);  
+      expect(pool.query).toHaveBeenCalledWith("INSERT INTO account (email, password) VALUES ($1, $2);", ['test@example.com', 'test']);  
     });
   });
 });
@@ -188,8 +188,8 @@ describe("Account Controller", () => {
       const response = await request(app).post('/auth/signup').send(body); 
   
       expect(pool.query).toBeCalledTimes(2);
-      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = 'test@example.com';");  
-      expect(pool.query).toHaveBeenCalledWith(expect.stringMatching(/INSERT INTO account \(email, password\) VALUES \('test@example.com', '[^']+'\);/));
+      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);  
+      expect(pool.query).toHaveBeenCalledWith("INSERT INTO account (email, password) VALUES ($1, $2);", ['test@example.com', expect.anything()]);
   
       expect(response.header['content-type']).toBe('text/html; charset=utf-8');
       expect(response.statusCode).toBe(201);
@@ -205,7 +205,7 @@ describe("Account Controller", () => {
       const response = await request(app).post('/auth/signup').send(body); 
   
       expect(pool.query).toBeCalledTimes(2);
-      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = 'test@example.com';");  
+      expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);  
       expect(pool.query).not.toHaveBeenCalledWith("INSERT INTO account (email, password) VALUES ('test@example.com', 'test');");
   
       expect(response.header['content-type']).toBe('text/html; charset=utf-8');
@@ -239,7 +239,7 @@ describe("Account Controller", () => {
   
     test("signin() rejects missing password", async () => {
       let body = {
-        email: 'chris@chrisgrime.com',
+        email: 'test@example.com',
       };
   
       const response = await request(app).post('/auth/signin').send(body); 
@@ -251,14 +251,14 @@ describe("Account Controller", () => {
   
     test('signin() returns error if password is incorrect', async () => {
       let body = {
-        email: 'chris@chrisgrime.com',
+        email: 'test@example.com',
         password: 'test',
       };
   
       pool.query.mockResolvedValue({
         rows: [
           {
-            email: 'chris@chrisgrime.com',
+            email: 'test@example.com',
             password: 'test',
           },
         ],
@@ -272,14 +272,14 @@ describe("Account Controller", () => {
   
     test('signin() successfully authenticates user', async () => {
       let body = {
-        email: 'chris@chrisgrime.com',
+        email: 'test@example.com',
         password: 'test',
       };
   
       pool.query.mockResolvedValue({
         rows: [
           {
-            email: 'chris@chrisgrime.com',
+            email: 'test@example.com',
             password: await bcrypt.hash('test',10),
           },
         ],
@@ -318,14 +318,14 @@ describe("Account Controller", () => {
   
     test('returns response succesfully', async () => {
       let body = {
-        email: 'chris@chrisgrime.com',
+        email: 'test@example.com',
         password: 'test',
       };
   
       pool.query.mockResolvedValue({
         rows: [
           {
-            email: 'chris@chrisgrime.com',
+            email: 'test@example.com',
             password: await bcrypt.hash('test',10),
           },
         ],
