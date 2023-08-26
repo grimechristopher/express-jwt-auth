@@ -88,7 +88,7 @@ describe('Account Model', () => {
       // The database should have been queried once
       expect(pool.query).toBeCalledTimes(1);
       expect(pool.query).toHaveBeenCalledWith("SELECT * FROM account WHERE email = $1;", ['test@example.com']);
-      
+     
       // findByEmail should return an empty array
       expect(findingEmail).toHaveLength(0);
     });
